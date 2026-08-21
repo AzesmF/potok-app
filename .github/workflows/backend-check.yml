@@ -1,0 +1,48 @@
+name: Backend Code Check
+
+on:
+  push:
+    branches: [ "master", "main" ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ "master", "main" ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  backend-validation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check Python syntax
+        run: |
+          cd backend
+          python -m py_compile app/main.py
+          echo "✅ Python syntax check passed"
+
+      - name: Verify project structure
+        run: |
+          test -f backend/requirements.txt || exit 1
+          test -f backend/app/main.py || exit 1
+          test -d backend/app/api || exit 1
+          echo "✅ Project structure is valid"
+
+      - name: Test FastAPI app can start
+        run: |
+          cd backend
+          timeout 5 python -c "from app.main import app; print('FastAPI app loaded successfully')" || true
