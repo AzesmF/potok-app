@@ -1,18 +1,31 @@
-name: Backend Code Check
+name: Backend Code Check & KON-MATRIX L1
 
 on:
   push:
     branches: [ "master", "main" ]
-    paths:
-      - 'backend/**'
   pull_request:
     branches: [ "master", "main" ]
-    paths:
-      - 'backend/**'
 
 jobs:
+  kon-matrix-l1:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run KON-MATRIX L1 Scanner
+        run: |
+          python3 tools/scanner-l1.py
+
   backend-validation:
     runs-on: ubuntu-latest
+    needs: kon-matrix-l1
     
     steps:
       - name: Checkout repository
