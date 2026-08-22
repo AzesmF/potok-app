@@ -1,48 +1,58 @@
 """
-Главный файл приложения Поток.
-Подключает все роутеры и настраивает middleware.
+Главный файл приложения FastAPI.
+Инициализирует базу данных при старте.
 """
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import journal, onboarding, profile
-from app.core.config import settings
+from contextlib import asynccontextmanager
 import logging
 
-# Настройка логирования (Принцип Прозрачности)
+from app.api.v1 import journal, onboarding
+from app.db.database import init_db
+
+# Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
+# Lifespan контекст (инициализация при старте)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # При старте
+    logging.info("Инициализация базы данных...")
+    await init_db()
+    logging.info("✅ База данных готова")
+    yield
+    # При завершении (очистка ресурсов)
+    logging.info("Завершение работы...")
+
 app = FastAPI(
-    title=settings.app_name,
-    description="Приложение-дневник с режимами: обычный и Поток (CCF)",
-    version=settings.version
+    title="Поток API",
+    description="API для приложения «Поток» - отвечающий дневник с ИИ",
+    version="0.2.0",
+    lifespan=lifespan
 )
 
-# CORS для кроссплатформенного клиента
+# CORS для Flutter
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # В продакшене — конкретные домены
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Подключение роутеров
+# Подключаем роутеры
 app.include_router(journal.router)
 app.include_router(onboarding.router)
-app.include_router(profile.router)
 
 @app.get("/")
 async def root():
     return {
         "message": "Поток API работает",
-        "version": settings.version,
-        "modes": settings.available_modes
+        "version": "0.2.0",
+        "modes": ["journal", "flow"],
+        "database": "SQLite + ChromaDB"
     }
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}

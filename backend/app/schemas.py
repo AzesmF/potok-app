@@ -1,34 +1,41 @@
 """
-Pydantic схемы для API контрактов.
-Разделены по доменам: journal, onboarding, profile.
+Pydantic схемы для валидации запросов и ответов API.
 """
 
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from app.core.mind_types import MindType
+from datetime import datetime
 
-# === Journal (Дневник) ===
+# ==========================================
+# Journal Schemas
+# ==========================================
+
+class TaskItem(BaseModel):
+    title: str
+    priority: str  # "high", "medium", "low"
+    estimated_time_min: int
 
 class JournalEntryRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=10000, description="Текст записи")
-    mode: str = Field(default="journal", description="Режим: journal (обычный) или flow (Поток с LLM)")
-    date: Optional[str] = Field(None, description="Дата записи (ISO формат). Если не указана — сегодня.")
+    text: str = Field(..., min_length=1, description="Текст записи")
+    mode: str = Field(default="journal", description="Режим: 'journal' или 'flow'")
+    date: Optional[str] = None
 
 class JournalEntryResponse(BaseModel):
     id: str
     text: str
     date: str
     mode: str
-    # Поля заполняются только в режиме flow
     ai_response: Optional[str] = None
-    structured_tasks: Optional[List[dict]] = None
+    structured_tasks: Optional[List[TaskItem]] = None
     reflection_question: Optional[str] = None
 
 class JournalListResponse(BaseModel):
     entries: List[JournalEntryResponse]
     total: int
 
-# === Onboarding (Определение типа мышления) ===
+# ==========================================
+# Onboarding / Profile Schemas
+# ==========================================
 
 class StressTestStartResponse(BaseModel):
     user_id: str
@@ -40,19 +47,19 @@ class StressTestAnswerRequest(BaseModel):
     question_index: int
     answer: str
 
-class StressTestResultResponse(BaseModel):
-    user_id: str
+class RecommendedSphere(BaseModel):
+    sphere: str
+    reason: str
+
+class StressTestCompleteResponse(BaseModel):
     mind_type: str
     mind_type_description: str
     key_patterns: List[str]
-    recommended_spheres: List[dict]
+    recommended_spheres: List[RecommendedSphere]
     micro_step: str
     disclaimer: str
 
-# === Profile ===
-
-class UserProfileResponse(BaseModel):
+class MindTypeResponse(BaseModel):
     user_id: str
     mind_type: Optional[str]
-    stress_test_completed: bool
-    active_mode: str
+    created_at: Optional[str]

@@ -40,3 +40,8 @@ Thumbs.db
 .pub-cache/
 .pub/
 /build/
+
+# Local Databases and Vector Stores
+поток.db
+chroma_db/
+*.db
