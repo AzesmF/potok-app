@@ -31,7 +31,6 @@ async def create_entry(entry: JournalEntryRequest):
     entry_id = str(uuid4())
     entry_date = entry.date or datetime.utcnow().isoformat()
     
-    # Базовый ответ (работает в обоих режимах)
     response = JournalEntryResponse(
         id=entry_id,
         text=entry.text,
@@ -39,10 +38,7 @@ async def create_entry(entry: JournalEntryRequest):
         mode=entry.mode,
     )
     
-    # Если режим flow — активируем LLM
     if entry.mode == "flow":
-        # Для MVP создаём временного пользователя, если нет профиля
-        # В будущем — привязка к authenticated user
         user = create_user()
         llm = get_llm_provider()
         ai_result = await llm.generate_flow_response(entry.text, user.mind_type)
@@ -71,3 +67,16 @@ async def get_entry(entry_id: str):
         if entry.id == entry_id:
             return entry
     raise HTTPException(status_code=404, detail="Запись не найдена")
+
+@router.delete("/entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_entry(entry_id: str):
+    """Удалить запись по ID."""
+    global _entries_db
+    original_len = len(_entries_db)
+    _entries_db = [e for e in _entries_db if e.id != entry_id]
+    
+    if len(_entries_db) == original_len:
+        raise HTTPException(status_code=404, detail="Запись не найдена")
+    
+    logger.info(f"Entry deleted: {entry_id}")
+    return None

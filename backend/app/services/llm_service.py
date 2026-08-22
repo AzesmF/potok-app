@@ -32,9 +32,8 @@ class MockLLMProvider(LLMProvider):
     """Mock-реализация для MVP. Возвращает заглушки."""
     
     async def generate_flow_response(self, user_text: str, mind_type: Optional[MindType]) -> dict:
-        type_context = f" (тип: {mind_type.value})" if mind_type else ""
         return {
-            "ai_response": f"Я слышу тебя{type_context}. Твоя запись важна. Давай разберём её вместе в духе Поля Со-Творения.",
+            "ai_response": "Я тебя услышал. Давай разберём твою запись вместе и найдём важное.",
             "structured_tasks": [
                 {"title": "Разобрать запись на ключевые темы", "priority": "high", "estimated_time_min": 15},
                 {"title": "Сформулировать следующий шаг", "priority": "medium", "estimated_time_min": 10}
@@ -43,8 +42,6 @@ class MockLLMProvider(LLMProvider):
         }
     
     async def analyze_mind_type(self, answers: List[dict]) -> dict:
-        # В MVP возвращаем аналитический тип по умолчанию
-        # В будущем здесь будет реальный анализ через LLM
         return {
             "mind_type": MindType.ANALYTICAL,
             "key_patterns": [
@@ -61,7 +58,6 @@ class MockLLMProvider(LLMProvider):
             "disclaimer": "Это гипотеза, а не приговор. Выбор всегда за тобой."
         }
 
-# Singleton для MVP
 _llm_instance: Optional[LLMProvider] = None
 
 def get_llm_provider() -> LLMProvider:
