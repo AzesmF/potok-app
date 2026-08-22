@@ -16,7 +16,7 @@ from app.schemas import (
 )
 from app.db.database import get_db
 from app.db.models import JournalEntry
-from app.db.vector_store import get_vector_store
+from app.services.quantum_memory import get_quantum_memory
 from app.services.llm_service import get_llm_provider
 from app.services.embedding_service import generate_embedding
 import logging
@@ -66,9 +66,9 @@ async def create_entry(entry: JournalEntryRequest, db: AsyncSession = Depends(ge
     
     # Сохраняем в ChromaDB (векторный поиск)
     try:
-        vector_store = get_vector_store()
+        quantum_memory = get_quantum_memory()
         embedding = generate_embedding(entry.text)
-        vector_store.add_entry(
+        quantum_memory.add_entry(
             entry_id=entry_id,
             text=entry.text,
             embedding=embedding,
@@ -78,9 +78,9 @@ async def create_entry(entry: JournalEntryRequest, db: AsyncSession = Depends(ge
                 "has_ai_response": entry.mode == "flow"
             }
         )
-        logger.info(f"Entry added to vector store. ID: {entry_id[:8]}")
+        logger.info(f"Entry added to quantum memory. ID: {entry_id[:8]}")
     except Exception as e:
-        logger.error(f"Failed to add to vector store: {e}")
+        logger.error(f"Failed to add to quantum memory: {e}")
     
     return response
 
@@ -141,11 +141,11 @@ async def delete_entry(entry_id: str, db: AsyncSession = Depends(get_db)):
     
     # Удаляем из ChromaDB
     try:
-        vector_store = get_vector_store()
-        vector_store.delete_entry(entry_id)
-        logger.info(f"Entry deleted from both stores. ID: {entry_id[:8]}")
+        quantum_memory = get_quantum_memory()
+        quantum_memory.delete_entry(entry_id)
+        logger.info(f"Entry deleted from SQLite and quantum memory. ID: {entry_id[:8]}")
     except Exception as e:
-        logger.error(f"Failed to delete from vector store: {e}")
+        logger.error(f"Failed to delete from quantum memory: {e}")
     
     return None
 
@@ -153,7 +153,7 @@ async def delete_entry(entry_id: str, db: AsyncSession = Depends(get_db)):
 async def search_entries(query: str, limit: int = 5):
     """Семантический поиск по записям через ChromaDB."""
     try:
-        vector_store = get_vector_store()
+        quantum_memory = get_quantum_memory()
         query_embedding = generate_embedding(query)
         similar = vector_store.search_similar(query_embedding, n_results=limit)
         

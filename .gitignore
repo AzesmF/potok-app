@@ -45,3 +45,9 @@ Thumbs.db
 поток.db
 chroma_db/
 *.db
+
+# Local Databases and Vector Stores
+поток.db
+chroma_db/
+*.db
+axiom_core_ethical_audit.log
