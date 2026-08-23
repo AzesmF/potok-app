@@ -155,7 +155,7 @@ async def search_entries(query: str, limit: int = 5):
     try:
         quantum_memory = get_quantum_memory()
         query_embedding = generate_embedding(query)
-        similar = vector_store.search_similar(query_embedding, n_results=limit)
+        similar = quantum_memory.search_similar(query_embedding, n_results=limit)
         
         return {"results": similar, "total": len(similar)}
     except Exception as e:

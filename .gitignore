@@ -51,3 +51,8 @@ chroma_db/
 chroma_db/
 *.db
 axiom_core_ethical_audit.log
+
+# ML Models Cache
+.cache/
+*.pt
+*.bin
