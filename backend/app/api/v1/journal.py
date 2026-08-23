@@ -17,7 +17,7 @@ from app.schemas import (
 from app.db.database import get_db
 from app.db.models import JournalEntry
 from app.services.quantum_memory import get_quantum_memory
-from app.services.llm_service import get_llm_provider
+from app.services.symbiotic_llm import get_symbiotic_llm
 from app.services.embedding_service import generate_embedding
 import logging
 
@@ -39,7 +39,7 @@ async def create_entry(entry: JournalEntryRequest, db: AsyncSession = Depends(ge
     
     # Если режим flow - активируем ИИ
     if entry.mode == "flow":
-        llm = get_llm_provider()
+        llm = get_symbiotic_llm()
         ai_result = await llm.generate_flow_response(entry.text, None)
         
         response.ai_response = ai_result["ai_response"]

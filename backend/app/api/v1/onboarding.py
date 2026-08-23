@@ -16,7 +16,7 @@ from app.schemas import (
 )
 from app.db.database import get_db
 from app.db.models import User, MindTypeEnum
-from app.services.llm_service import get_llm_provider
+from app.services.symbiotic_llm import get_symbiotic_llm
 
 router = APIRouter(prefix="/api/v1/onboarding", tags=["onboarding"])
 logger = logging.getLogger("potok.onboarding")
@@ -73,7 +73,7 @@ async def complete_stress_test(user_id: str, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     
     # Определяем тип мышления через LLM
-    llm = get_llm_provider()
+    llm = get_symbiotic_llm()
     analysis = await llm.analyze_mind_type([])  # В MVP передаём пустой список
     
     # Сохраняем тип мышления
