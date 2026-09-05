@@ -100,7 +100,7 @@ sentence-transformers==6.0.0
 shellingham==1.5.4
 six==1.17.0
 SQLAlchemy==2.0.52
-starlette==0.35.1
+starlette==1.6.0
 sympy==1.14.0
 tenacity==9.1.4
 threadpoolctl==3.6.0
