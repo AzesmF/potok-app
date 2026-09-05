@@ -1,0 +1,29 @@
+{
+  "project": "potok-app",
+  "kon_matrix_target": "L3",
+  "generated_at": "2026-09-05T21:10:07.858826Z",
+  "artifacts": {
+    "TRA-L3 (WORM Audit)": {
+      "status": "active",
+      "entries": 1,
+      "chain_valid": true,
+      "last_hash": "3ba298f31bdc1d34..."
+    },
+    "PUR-L3 (SBOM)": {
+      "status": "valid",
+      "format": "CycloneDX",
+      "version": "1.4",
+      "components_count": 121
+    },
+    "INT-L3 (AI Prompts Versioned)": {
+      "status": "implemented",
+      "file": "backend/app/core/prompts.py"
+    }
+  },
+  "compliance_summary": {
+    "INT": "Partial (Prompts versioned, CI/CD pending)",
+    "PUR": "Partial (SBOM generated, DAST pending)",
+    "EVO": "Partial (ADR-001 exists, Linters pending)",
+    "TRA": "Pass (WORM + Export Bundle implemented)"
+  }
+}
