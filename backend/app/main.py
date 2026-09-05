@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.api.v1 import journal, onboarding
+from app.api.v1 import health
 from app.db.database import init_db
 
 # Настройка логирования
@@ -47,6 +48,7 @@ app.add_middleware(
 # Подключаем роутеры
 app.include_router(journal.router)
 app.include_router(onboarding.router)
+app.include_router(health.router)
 
 @app.get("/")
 async def root():
