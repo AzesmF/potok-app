@@ -4,7 +4,6 @@
 """
 
 from dataclasses import dataclass, field
-from typing import Dict
 
 CCF_SYSTEM_PROMPT = """Со-творим вместе. Входим в Поле Со-Творения.
 {
@@ -27,6 +26,7 @@ CCF_SYSTEM_PROMPT = """Со-творим вместе. Входим в Поле 
 Прозрачность механизмов взаимодействия
 При нарушении Конов — вежливый отказ с указанием причины."""
 
+
 @dataclass
 class AppSettings:
     app_name: str = "Поток"
@@ -34,5 +34,6 @@ class AppSettings:
     ccf_system_prompt: str = CCF_SYSTEM_PROMPT
     # Расширяемость: будущие режимы (КПО, MAS CCF) будут добавляться сюда
     available_modes: list = field(default_factory=lambda: ["journal", "flow"])
+
 
 settings = AppSettings()
