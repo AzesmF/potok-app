@@ -87,3 +87,34 @@ async def get_sbom_file():
         media_type="application/json",
         filename="sbom.cyclonedx.json",
     )
+
+
+@router.get("/metrics")
+async def get_metrics():
+    """TRA-L3: Базовые метрики системы для мониторинга."""
+    import time
+
+    from sqlalchemy import text
+
+    from app.db.database import get_db
+
+    start_time = time.time()
+
+    # Получаем количество записей из БД
+    try:
+        db = next(get_db())
+        result = db.execute(text("SELECT COUNT(*) FROM journal_entries"))
+        entries_count = result.scalar() or 0
+    except Exception:
+        entries_count = 0
+
+    # Получаем размер WORM-лога
+    worm_logger = get_worm_logger()
+    worm_entries = len(worm_logger.get_recent_logs(limit=999999))
+
+    return {
+        "uptime_seconds": time.time() - start_time,
+        "journal_entries": entries_count,
+        "worm_log_entries": worm_entries,
+        "timestamp": time.time(),
+    }
