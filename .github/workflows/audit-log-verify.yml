@@ -7,9 +7,8 @@ on:
       - 'backend/audit_log.jsonl'
       - 'tools/export-audit-bundle.py'
   schedule:
-    # Еженедельная проверка целостности даже без изменений (каждую пятницу в 00:00)
     - cron: '0 0 * * 5'
-  workflow_dispatch: # Возможность запустить вручную
+  workflow_dispatch:
 
 jobs:
   verify-worm-chain:
@@ -36,7 +35,8 @@ jobs:
           with open('audit-bundle.json', 'r', encoding='utf-8') as f:
               data = json.load(f)
               
-          worm_status = data['artifacts']['TRA-L3 (Audit & Observability)']['worm_audit']
+          # Используем новый ключ из v2.0
+          worm_status = data['artifacts']['TRA-L3 (Transparency)']['worm_audit']
           
           if worm_status['status'] == 'empty':
               print('⚠️ WORM log is empty, but structurally valid.')
