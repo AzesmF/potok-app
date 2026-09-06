@@ -1,0 +1,48 @@
+name: PUR-L3 SBOM Generation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/requirements.txt'
+      - 'frontend/pubspec.yaml'
+      - 'tools/generate-sbom.py'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/requirements.txt'
+      - 'frontend/pubspec.yaml'
+
+jobs:
+  generate-sbom:
+    name: Generate Aggregate SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Generate SBOM
+        run: python3 tools/generate-sbom.py
+
+      - name: Upload SBOM as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aggregate-sbom
+          path: sbom/aggregate.cyclonedx.json
+          retention-days: 90
+
+      - name: Validate SBOM Format
+        run: |
+          python3 -c "
+          import json
+          with open('sbom/aggregate.cyclonedx.json', 'r') as f:
+              data = json.load(f)
+          assert data['bomFormat'] == 'CycloneDX', 'Invalid SBOM format'
+          assert data['specVersion'] == '1.4', 'Invalid SBOM version'
+          print(f'✅ SBOM valid: {len(data[\"components\"])} components')
+          "
