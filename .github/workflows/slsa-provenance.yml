@@ -1,0 +1,133 @@
+name: INT-L3 SLSA Provenance
+
+on:
+  push:
+    tags:
+      - 'v*'  # Запускается только при создании Git tag (релиза)
+  workflow_dispatch:  # Возможность запустить вручную
+
+jobs:
+  build-and-provenance:
+    name: Build Docker Image & Generate Provenance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Для создания GitHub Release
+      id-token: write  # Для OIDC (если понадобится)
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Полная история для provenance
+
+      - name: Extract Version from Tag
+        id: version
+        run: |
+          # Извлекаем версию из тега (v0.3.0 -> 0.3.0)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building version: $VERSION"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image (without push)
+        id: build
+        run: |
+          cd backend
+          # Собираем образ локально (не пушим в registry для пилота)
+          docker build -t potok-app-backend:${{ steps.version.outputs.version }} .
+          
+          # Получаем SHA256 хеш образа
+          IMAGE_ID=$(docker inspect --format='{{index .Id}}' potok-app-backend:${{ steps.version.outputs.version }})
+          echo "image_id=$IMAGE_ID" >> $GITHUB_OUTPUT
+          echo "🔒 Image ID: $IMAGE_ID"
+
+      - name: Generate SLSA Provenance
+        run: |
+          # Получаем Git commit SHA
+          GIT_SHA=$(git rev-parse HEAD)
+          
+          # Получаем текущее время в ISO формате
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
+          # Вычисляем хеш исходников (для верификации)
+          SOURCE_HASH=$(git archive HEAD | sha256sum | cut -d' ' -f1)
+          
+          # Создаём provenance файл (упрощённый SLSA Level 1-2)
+          cat << PROVENANCE > slsa-provenance.json
+          {
+            "buildType": "https://github.com/AzesmF/potok-app/docker-build@v1",
+            "builder": {
+              "id": "https://github.com/AzesmF/potok-app/.github/workflows/slsa-provenance.yml"
+            },
+            "invocation": {
+              "configSource": {
+                "uri": "https://github.com/AzesmF/potok-app",
+                "digest": {
+                  "sha1": "$GIT_SHA"
+                },
+                "entryPoint": ".github/workflows/slsa-provenance.yml"
+              },
+              "parameters": {
+                "version": "${{ steps.version.outputs.version }}"
+              }
+            },
+            "buildConfig": {
+              "dockerfile": "backend/Dockerfile",
+              "context": "backend/"
+            },
+            "materials": [
+              {
+                "uri": "https://github.com/AzesmF/potok-app",
+                "digest": {
+                  "sha1": "$GIT_SHA",
+                  "sha256": "$SOURCE_HASH"
+                }
+              }
+            ],
+            "metadata": {
+              "buildInvocationID": "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT",
+              "buildStartedOn": "$BUILD_TIME",
+              "completeness": {
+                "parameters": true,
+                "environment": false,
+                "materials": true
+              },
+              "reproducible": false
+            }
+          }
+          PROVENANCE
+          
+          echo "✅ SLSA Provenance generated"
+          cat slsa-provenance.json | python3 -m json.tool
+
+      - name: Export Docker Image to Tar
+        run: |
+          cd backend
+          docker save potok-app-backend:${{ steps.version.outputs.version }} > ../potok-app-backend-${{ steps.version.outputs.version }}.tar
+          cd ..
+          # Вычисляем хеш архива
+          sha256sum potok-app-backend-${{ steps.version.outputs.version }}.tar > potok-app-backend-${{ steps.version.outputs.version }}.tar.sha256
+          echo "🔒 Image archive hash:"
+          cat potok-app-backend-${{ steps.version.outputs.version }}.tar.sha256
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            slsa-provenance.json
+            potok-app-backend-${{ steps.version.outputs.version }}.tar
+            potok-app-backend-${{ steps.version.outputs.version }}.tar.sha256
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Provenance as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: slsa-provenance
+          path: slsa-provenance.json
+          retention-days: 365
