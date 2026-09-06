@@ -1,29 +1,66 @@
 {
   "project": "potok-app",
   "kon_matrix_target": "L3",
-  "generated_at": "2026-09-05T22:12:01.218927Z",
+  "generated_at": "2026-09-06T08:53:25.633345Z",
   "artifacts": {
-    "TRA-L3 (WORM Audit)": {
-      "status": "active",
-      "entries": 1,
-      "chain_valid": true,
-      "last_hash": "3ba298f31bdc1d34..."
+    "INT-L3 (AI Prompts & CI Gates)": {
+      "prompts_versioned": {
+        "status": "implemented",
+        "file": "backend/app/core/prompts.py"
+      },
+      "ci_linters": {
+        "status": "implemented",
+        "file": ".github/workflows/linters.yml"
+      }
     },
-    "PUR-L3 (SBOM)": {
-      "status": "valid",
-      "format": "CycloneDX",
-      "version": "1.4",
-      "components_count": 121
+    "PUR-L3 (Supply Chain & DAST)": {
+      "sbom_aggregated": {
+        "status": "valid",
+        "format": "CycloneDX",
+        "version": "1.4",
+        "components_count": 123,
+        "type": "aggregate"
+      },
+      "dast_workflow": {
+        "status": "implemented",
+        "file": ".github/workflows/dast.yml"
+      },
+      "dependabot": {
+        "status": "implemented",
+        "file": ".github/dependabot.yml"
+      }
     },
-    "INT-L3 (AI Prompts Versioned)": {
-      "status": "implemented",
-      "file": "backend/app/core/prompts.py"
+    "EVO-L3 (Architecture & Quality)": {
+      "adr_registry": {
+        "status": "implemented",
+        "count": 2,
+        "files": [
+          "0001-use-flutter-and-fastapi.md",
+          "0002-ai-stack-and-data-processing.md"
+        ]
+      },
+      "ruff_config": {
+        "status": "implemented",
+        "file": "backend/ruff.toml"
+      }
+    },
+    "TRA-L3 (Audit & Observability)": {
+      "worm_audit": {
+        "status": "active",
+        "entries": 1,
+        "chain_valid": true,
+        "last_hash": "3ba298f31bdc1d34..."
+      },
+      "health_api": {
+        "status": "implemented",
+        "file": "backend/app/api/v1/health.py"
+      }
     }
   },
   "compliance_summary": {
-    "INT": "Partial (Prompts versioned, CI/CD pending)",
-    "PUR": "Partial (SBOM generated, DAST pending)",
-    "EVO": "Partial (ADR-001 exists, Linters pending)",
-    "TRA": "Pass (WORM + Export Bundle implemented)"
+    "INT (Целостность)": "Pass",
+    "PUR (Чистота)": "Pass",
+    "EVO (Становление)": "Pass",
+    "TRA (Прозрачность)": "Pass"
   }
 }
