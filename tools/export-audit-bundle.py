@@ -2,7 +2,7 @@
 """
 Генератор Audit Bundle (Паспорт зрелости пилота).
 Стандарт TRA-L3: Агрегация всех артефактов аудита Kon-Matrix L3 в единый формат.
-Версия: 1.1 (Динамическое сканирование ADR)
+Версия: 2.0 (Полное покрытие всех 4 Конов)
 """
 import json
 import os
@@ -50,48 +50,45 @@ def get_sbom_status():
         return {"status": "invalid", "error": str(e)}
 
 def get_adr_status():
-    """Динамическое сканирование папки ADR"""
     adr_dir = "docs/adr"
     if not os.path.exists(adr_dir):
         return {"status": "missing", "count": 0}
-    
-    # Ищем все .md файлы в папке
     adr_files = glob.glob(os.path.join(adr_dir, "*.md"))
-    count = len(adr_files)
-    
-    # Извлекаем номера и названия для красивого вывода
-    adr_list = []
-    for f in sorted(adr_files):
-        filename = os.path.basename(f)
-        adr_list.append(filename)
-        
     return {
-        "status": "implemented" if count > 0 else "empty",
-        "count": count,
-        "files": adr_list
+        "status": "implemented" if len(adr_files) > 0 else "empty",
+        "count": len(adr_files),
+        "files": sorted([os.path.basename(f) for f in adr_files])
     }
 
 def generate_bundle():
-    int_l3_prompts = check_file_exists("backend/app/core/prompts.py")
-    int_l3_ci = check_file_exists(".github/workflows/linters.yml")
-    
-    pur_l3_sbom = get_sbom_status()
-    pur_l3_dast = check_file_exists(".github/workflows/dast.yml")
-    pur_l3_dependabot = check_file_exists(".github/dependabot.yml")
-    
-    # Теперь используем динамическую проверку
-    evo_l3_adr = get_adr_status()
-    evo_l3_ruff = check_file_exists("backend/ruff.toml")
-    
-    tra_l3_worm = get_worm_status()
-    tra_l3_health = check_file_exists("backend/app/api/v1/health.py")
+    # INT-L3
+    int_prompts = check_file_exists("backend/app/core/prompts.py")
+    int_linters = check_file_exists(".github/workflows/linters.yml")
+    int_docker = check_file_exists("backend/Dockerfile")
+    int_slsa = check_file_exists(".github/workflows/slsa-provenance.yml")
 
+    # PUR-L3
+    pur_sbom = get_sbom_status()
+    pur_dast = check_file_exists(".github/workflows/dast.yml")
+    pur_dependabot = check_file_exists(".github/dependabot.yml")
+    pur_audit_doc = check_file_exists("docs/l3/independent-audit.md")
+
+    # EVO-L3
+    evo_adr = get_adr_status()
+    evo_ruff = check_file_exists("backend/ruff.toml")
+    evo_deploy_doc = check_file_exists("docs/l3/zero-downtime-deployment.md")
+
+    # TRA-L3
+    tra_worm = get_worm_status()
+    tra_health = check_file_exists("backend/app/api/v1/health.py")
+    tra_audit_ci = check_file_exists(".github/workflows/audit-log-verify.yml")
+
+    # Сводка соответствия (строгая логика: все ключевые файлы должны быть implemented)
     compliance = {
-        "INT (Целостность)": "Pass" if int_l3_prompts["status"] == "implemented" and int_l3_ci["status"] == "implemented" else "Partial",
-        "PUR (Чистота)": "Pass" if pur_l3_sbom["status"] == "valid" and pur_l3_dast["status"] == "implemented" else "Partial",
-        # EVO теперь зависит от наличия хотя бы одного ADR
-        "EVO (Становление)": "Pass" if evo_l3_adr["count"] >= 1 and evo_l3_ruff["status"] == "implemented" else "Partial",
-        "TRA (Прозрачность)": "Pass" if tra_l3_worm["status"] == "active" and tra_l3_worm["chain_valid"] else "Partial"
+        "INT (Целостность)": "Pass" if all(x["status"] == "implemented" for x in [int_prompts, int_linters, int_docker, int_slsa]) else "Partial",
+        "PUR (Чистота)": "Pass" if pur_sbom["status"] == "valid" and all(x["status"] == "implemented" for x in [pur_dast, pur_dependabot, pur_audit_doc]) else "Partial",
+        "EVO (Становление)": "Pass" if evo_adr["count"] >= 2 and all(x["status"] == "implemented" for x in [evo_ruff, evo_deploy_doc]) else "Partial",
+        "TRA (Прозрачность)": "Pass" if tra_worm["status"] == "active" and tra_worm["chain_valid"] and all(x["status"] == "implemented" for x in [tra_health, tra_audit_ci]) else "Partial"
     }
 
     bundle = {
@@ -99,23 +96,10 @@ def generate_bundle():
         "kon_matrix_target": "L3",
         "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
         "artifacts": {
-            "INT-L3 (AI Prompts & CI Gates)": {
-                "prompts_versioned": int_l3_prompts,
-                "ci_linters": int_l3_ci
-            },
-            "PUR-L3 (Supply Chain & DAST)": {
-                "sbom_aggregated": pur_l3_sbom,
-                "dast_workflow": pur_l3_dast,
-                "dependabot": pur_l3_dependabot
-            },
-            "EVO-L3 (Architecture & Quality)": {
-                "adr_registry": evo_l3_adr, # Теперь здесь список всех ADR
-                "ruff_config": evo_l3_ruff
-            },
-            "TRA-L3 (Audit & Observability)": {
-                "worm_audit": tra_l3_worm,
-                "health_api": tra_l3_health
-            }
+            "INT-L3 (Integrity)": {"prompts": int_prompts, "linters": int_linters, "docker": int_docker, "slsa": int_slsa},
+            "PUR-L3 (Purity)": {"sbom": pur_sbom, "dast": pur_dast, "dependabot": pur_dependabot, "audit_guide": pur_audit_doc},
+            "EVO-L3 (Evolution)": {"adr_registry": evo_adr, "ruff": evo_ruff, "deployment_guide": evo_deploy_doc},
+            "TRA-L3 (Transparency)": {"worm_audit": tra_worm, "health_api": tra_health, "audit_ci": tra_audit_ci}
         },
         "compliance_summary": compliance
     }
@@ -125,9 +109,9 @@ def generate_bundle():
         json.dump(bundle, f, indent=2, ensure_ascii=False)
         
     print(f"✅ Финальный Audit Bundle сгенерирован: {output_file}")
-    print("\n📊 Сводка соответствия Kon-Matrix L3:")
+    print("\n📊 ИТОГОВАЯ СВОДКА СООТВЕТСТВИЯ KON-MATRIX L3:")
     for k, v in compliance.items():
-        status_icon = "✅" if v == "Pass" else "️"
+        status_icon = "✅" if v == "Pass" else "⚠️"
         print(f"  {status_icon} {k}: {v}")
     
     return output_file

@@ -1,36 +1,48 @@
 {
   "project": "potok-app",
   "kon_matrix_target": "L3",
-  "generated_at": "2026-09-06T08:53:25.633345Z",
+  "generated_at": "2026-09-06T10:58:29.140674Z",
   "artifacts": {
-    "INT-L3 (AI Prompts & CI Gates)": {
-      "prompts_versioned": {
+    "INT-L3 (Integrity)": {
+      "prompts": {
         "status": "implemented",
         "file": "backend/app/core/prompts.py"
       },
-      "ci_linters": {
+      "linters": {
         "status": "implemented",
         "file": ".github/workflows/linters.yml"
+      },
+      "docker": {
+        "status": "implemented",
+        "file": "backend/Dockerfile"
+      },
+      "slsa": {
+        "status": "implemented",
+        "file": ".github/workflows/slsa-provenance.yml"
       }
     },
-    "PUR-L3 (Supply Chain & DAST)": {
-      "sbom_aggregated": {
+    "PUR-L3 (Purity)": {
+      "sbom": {
         "status": "valid",
         "format": "CycloneDX",
         "version": "1.4",
         "components_count": 123,
         "type": "aggregate"
       },
-      "dast_workflow": {
+      "dast": {
         "status": "implemented",
         "file": ".github/workflows/dast.yml"
       },
       "dependabot": {
         "status": "implemented",
         "file": ".github/dependabot.yml"
+      },
+      "audit_guide": {
+        "status": "implemented",
+        "file": "docs/l3/independent-audit.md"
       }
     },
-    "EVO-L3 (Architecture & Quality)": {
+    "EVO-L3 (Evolution)": {
       "adr_registry": {
         "status": "implemented",
         "count": 2,
@@ -39,12 +51,16 @@
           "0002-ai-stack-and-data-processing.md"
         ]
       },
-      "ruff_config": {
+      "ruff": {
         "status": "implemented",
         "file": "backend/ruff.toml"
+      },
+      "deployment_guide": {
+        "status": "implemented",
+        "file": "docs/l3/zero-downtime-deployment.md"
       }
     },
-    "TRA-L3 (Audit & Observability)": {
+    "TRA-L3 (Transparency)": {
       "worm_audit": {
         "status": "active",
         "entries": 1,
@@ -54,6 +70,10 @@
       "health_api": {
         "status": "implemented",
         "file": "backend/app/api/v1/health.py"
+      },
+      "audit_ci": {
+        "status": "implemented",
+        "file": ".github/workflows/audit-log-verify.yml"
       }
     }
   },
