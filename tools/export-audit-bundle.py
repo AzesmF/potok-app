@@ -2,7 +2,7 @@
 """
 Генератор Audit Bundle (Паспорт зрелости пилота).
 Стандарт TRA-L3: Агрегация всех артефактов аудита Kon-Matrix L3 в единый формат.
-Версия: 2.0 (Полное покрытие всех 4 Конов)
+Версия: 2.1 (Добавлена проверка external monitoring)
 """
 import json
 import os
@@ -82,13 +82,14 @@ def generate_bundle():
     tra_worm = get_worm_status()
     tra_health = check_file_exists("backend/app/api/v1/health.py")
     tra_audit_ci = check_file_exists(".github/workflows/audit-log-verify.yml")
+    tra_monitoring_doc = check_file_exists("docs/l3/external-monitoring.md")
 
-    # Сводка соответствия (строгая логика: все ключевые файлы должны быть implemented)
+    # Сводка соответствия
     compliance = {
         "INT (Целостность)": "Pass" if all(x["status"] == "implemented" for x in [int_prompts, int_linters, int_docker, int_slsa]) else "Partial",
         "PUR (Чистота)": "Pass" if pur_sbom["status"] == "valid" and all(x["status"] == "implemented" for x in [pur_dast, pur_dependabot, pur_audit_doc]) else "Partial",
         "EVO (Становление)": "Pass" if evo_adr["count"] >= 2 and all(x["status"] == "implemented" for x in [evo_ruff, evo_deploy_doc]) else "Partial",
-        "TRA (Прозрачность)": "Pass" if tra_worm["status"] == "active" and tra_worm["chain_valid"] and all(x["status"] == "implemented" for x in [tra_health, tra_audit_ci]) else "Partial"
+        "TRA (Прозрачность)": "Pass" if tra_worm["status"] == "active" and tra_worm["chain_valid"] and all(x["status"] == "implemented" for x in [tra_health, tra_audit_ci, tra_monitoring_doc]) else "Partial"
     }
 
     bundle = {
@@ -99,7 +100,7 @@ def generate_bundle():
             "INT-L3 (Integrity)": {"prompts": int_prompts, "linters": int_linters, "docker": int_docker, "slsa": int_slsa},
             "PUR-L3 (Purity)": {"sbom": pur_sbom, "dast": pur_dast, "dependabot": pur_dependabot, "audit_guide": pur_audit_doc},
             "EVO-L3 (Evolution)": {"adr_registry": evo_adr, "ruff": evo_ruff, "deployment_guide": evo_deploy_doc},
-            "TRA-L3 (Transparency)": {"worm_audit": tra_worm, "health_api": tra_health, "audit_ci": tra_audit_ci}
+            "TRA-L3 (Transparency)": {"worm_audit": tra_worm, "health_api": tra_health, "audit_ci": tra_audit_ci, "monitoring_guide": tra_monitoring_doc}
         },
         "compliance_summary": compliance
     }

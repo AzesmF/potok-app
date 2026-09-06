@@ -1,7 +1,7 @@
 {
   "project": "potok-app",
   "kon_matrix_target": "L3",
-  "generated_at": "2026-09-06T10:58:29.140674Z",
+  "generated_at": "2026-09-06T11:24:05.264188Z",
   "artifacts": {
     "INT-L3 (Integrity)": {
       "prompts": {
@@ -74,6 +74,10 @@
       "audit_ci": {
         "status": "implemented",
         "file": ".github/workflows/audit-log-verify.yml"
+      },
+      "monitoring_guide": {
+        "status": "implemented",
+        "file": "docs/l3/external-monitoring.md"
       }
     }
   },
