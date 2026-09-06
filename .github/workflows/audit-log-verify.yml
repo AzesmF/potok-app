@@ -6,6 +6,7 @@ on:
     paths:
       - 'backend/audit_log.jsonl'
       - 'tools/export-audit-bundle.py'
+      - '.github/workflows/audit-log-verify.yml'
   schedule:
     - cron: '0 0 * * 5'
   workflow_dispatch:
@@ -27,7 +28,6 @@ jobs:
         run: |
           python3 tools/export-audit-bundle.py
           
-          # Строгая проверка: если цепочка сломана, workflow упадет
           python3 -c "
           import json
           import sys
@@ -35,7 +35,6 @@ jobs:
           with open('audit-bundle.json', 'r', encoding='utf-8') as f:
               data = json.load(f)
               
-          # Используем новый ключ из v2.0
           worm_status = data['artifacts']['TRA-L3 (Transparency)']['worm_audit']
           
           if worm_status['status'] == 'empty':
